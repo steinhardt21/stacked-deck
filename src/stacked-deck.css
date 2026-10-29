@@ -2,6 +2,8 @@
  * Stacked Deck. Everything that moves is here; the script only writes
  * `data-depth` on each card and `data-dealing` on the deck.
  *
+ * Card size: `--sd-card-width` and `--sd-card-height`, set by the page.
+ *
  * Depth geometry: each card behind the front is 7.5% smaller and 28px
  * higher; the pile shows three behind the front, the fourth sits hidden
  * behind the third. A turned card (-1) grows, drops and fades away.
@@ -17,8 +19,6 @@
   --sd-fade: 180ms ease-out;
   --sd-step-scale: 0.075;
   --sd-step-rise: 28px;
-  --sd-card-width: min(100vw - 32px, 560px);
-  --sd-card-height: min(42svh, 380px);
   --sd-ring: #f7f7f5;
   --sd-gap: #121212;
   --sd-veil: rgb(14 14 14 / 0.72);
@@ -138,8 +138,9 @@
   --sd-depth: 0;
   position: relative;
   grid-area: 1 / 1;
-  width: var(--sd-card-width);
-  height: var(--sd-card-height);
+  /* Set either on the page (`:root { --sd-card-width: …; --sd-card-height: … }`). */
+  width: var(--sd-card-width, min(100vw - 32px, 560px));
+  height: var(--sd-card-height, min(42svh, 380px));
   padding: 0;
   border: 0;
   background: none;

@@ -12,11 +12,12 @@
  *   - Deals the visible cards up from below one at a time, the front card last.
  *   - Turns by wheel or trackpad (captured, never scrolling the page), by a
  *     vertical swipe, or by the arrow keys; Home and End jump to either end.
- *   - Ticks on every turn (a synthetic sound, see `tick.ts`), with a mute
- *     toggle remembered per browser.
+ *   - Sounds on open, on every turn and on a choice — a synthetic tick by
+ *     default, or any recorded set (`sounds.ts`), swappable while it runs —
+ *     with a mute toggle remembered per browser.
  */
 import './stacked-deck.css';
-import { createTicker } from './tick';
+import { createTickSound, wakeAudio, type DeckSound } from './sounds';
 
 export interface DeckCard {
   id: string;
@@ -36,14 +37,16 @@ export interface StackedDeckOptions {
   /** The front card was chosen (click, tap or Enter). The deck has already closed. */
   onChoose?(card: DeckCard): void;
   labels?: Partial<DeckLabels>;
-  /** Volume of the tick, 0–1. */
-  soundLevel?: number;
+  /** What the deck sounds like. Defaults to the synthetic tick. */
+  sound?: DeckSound;
 }
 
 export interface StackedDeck {
   /** Deals `cards` and opens the deck. Focus returns to `returnFocusTo` on close. */
   open(cards: readonly DeckCard[], returnFocusTo?: HTMLElement): void;
   close(): void;
+  /** Swaps the sound set, even while the deck is open. */
+  setSound(sound: DeckSound): void;
   destroy(): void;
 }
 
@@ -60,10 +63,9 @@ const PARKED_DEPTH = 4;
 const TRAVEL_PER_CARD = 48;
 /** A line-mode wheel (Firefox mouse wheels) in pixels per line. */
 const PIXELS_PER_LINE = 16;
-/** At most one tick per this many ms: a fast flick turns several cards a frame. */
-const MIN_TICK_GAP_MS = 45;
-const TURN_PITCH_HZ = 3200;
-const CHOOSE_PITCH_HZ = 1400;
+/** At most one turn sound per this many ms: a fast flick turns several cards a frame. */
+const MIN_TURN_SOUND_GAP_MS = 45;
+const MUTED_STORAGE_KEY = 'stacked-deck:muted';
 /** The deal's last card leaves at 360ms on a ~320ms spring; by this time all have landed. */
 const DEAL_LANDED_MS = 900;
 /** Longest exit fade, after which the dealt cards are removed from the page. */
@@ -76,7 +78,8 @@ let instances = 0;
 
 export function createStackedDeck(options: StackedDeckOptions = {}): StackedDeck {
   const labels = { ...DEFAULT_LABELS, ...options.labels };
-  const ticker = createTicker({ level: options.soundLevel ?? 0.45 });
+  let sound = options.sound ?? createTickSound();
+  let soundOn = readSoundOn();
   const hintId = `stacked-deck-hint-${++instances}`;
 
   const dialog = document.createElement('dialog');
@@ -106,7 +109,7 @@ export function createStackedDeck(options: StackedDeckOptions = {}): StackedDeck
   let chosen: DeckCard | null = null;
   let dealTimer: number | undefined;
   let clearTimer: number | undefined;
-  let lastTickAt = -Infinity;
+  let lastTurnSoundAt = -Infinity;
   let wheelTravel = 0;
   let swipe: { pointerId: number; y: number } | null = null;
 
@@ -154,9 +157,9 @@ export function createStackedDeck(options: StackedDeckOptions = {}): StackedDeck
     if (focusWasOnFront) elements[front]!.focus({ preventScroll: true });
 
     const now = performance.now();
-    if (now - lastTickAt >= MIN_TICK_GAP_MS) {
-      lastTickAt = now;
-      ticker.tick(TURN_PITCH_HZ);
+    if (soundOn && now - lastTurnSoundAt >= MIN_TURN_SOUND_GAP_MS) {
+      lastTurnSoundAt = now;
+      sound.turn();
     }
   }
 
@@ -164,12 +167,31 @@ export function createStackedDeck(options: StackedDeckOptions = {}): StackedDeck
     const card = deck[front];
     if (!card || chosen) return;
     chosen = card;
-    ticker.tick(CHOOSE_PITCH_HZ);
+    if (soundOn) sound.choose();
     dialog.close();
   }
 
+  function readSoundOn(): boolean {
+    try {
+      return localStorage.getItem(MUTED_STORAGE_KEY) !== '1';
+    } catch {
+      return true; // storage blocked (private mode): on for this visit
+    }
+  }
+
+  function setSoundOn(on: boolean) {
+    soundOn = on;
+    try {
+      if (on) localStorage.removeItem(MUTED_STORAGE_KEY);
+      else localStorage.setItem(MUTED_STORAGE_KEY, '1');
+    } catch {
+      // not remembered; holds for this visit
+    }
+    syncSoundButton();
+  }
+
   function syncSoundButton() {
-    soundButton.setAttribute('aria-pressed', String(ticker.enabled));
+    soundButton.setAttribute('aria-pressed', String(soundOn));
   }
 
   // ── Events ────────────────────────────────────────────────────────────────
@@ -219,11 +241,10 @@ export function createStackedDeck(options: StackedDeckOptions = {}): StackedDeck
     if (target === dialog) return dialog.close(); // the backdrop
     if (target.closest('[data-sd-close]')) return dialog.close();
     if (target.closest('[data-sd-sound]')) {
-      ticker.setEnabled(!ticker.enabled);
-      syncSoundButton();
-      if (ticker.enabled) {
-        ticker.wake();
-        ticker.tick(CHOOSE_PITCH_HZ);
+      setSoundOn(!soundOn);
+      if (soundOn) {
+        wakeAudio();
+        sound.choose(); // let the visitor hear what they turned on
       }
       return;
     }
@@ -265,8 +286,11 @@ export function createStackedDeck(options: StackedDeckOptions = {}): StackedDeck
       elements = cards.map(cardElement);
       pile.replaceChildren(...elements);
       paintNearFront();
+      soundOn = readSoundOn();
       syncSoundButton();
-      ticker.wake(); // inside the press that opened the deck: the activation audio needs
+      wakeAudio(); // inside the press that opened the deck: the activation audio needs
+      sound.prepare();
+      if (soundOn) sound.open();
 
       dialog.dataset.dealing = '';
       dialog.showModal();
@@ -278,6 +302,11 @@ export function createStackedDeck(options: StackedDeckOptions = {}): StackedDeck
 
     close() {
       if (dialog.open) dialog.close();
+    },
+
+    setSound(next) {
+      sound = next;
+      sound.prepare();
     },
 
     destroy() {

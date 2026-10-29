@@ -1,0 +1,121 @@
+/* Playing-card faces. Every size is a container-query unit of the face. */
+
+.pc-face,
+.sd-face.pc-face {
+  --pc-ink: #17181a;
+  --pc-paper: #fbf9f4;
+  container-type: size;
+  background: var(--pc-paper);
+  color: var(--pc-ink);
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  line-height: 1;
+  user-select: none;
+}
+
+.pc-face.pc-red {
+  --pc-ink: #c4122f;
+}
+
+/* A hairline frame just inside the edge, as printed cards have. */
+.pc-face::before {
+  content: '';
+  position: absolute;
+  inset: 3.2cqw;
+  border: 0.35cqw solid color-mix(in srgb, var(--pc-ink) 18%, transparent);
+  border-radius: 2.4cqw;
+  pointer-events: none;
+}
+
+.pc-corner {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  gap: 0.8cqw;
+  width: 12cqw;
+}
+
+.pc-corner-top {
+  top: 5.5cqw;
+  left: 5cqw;
+}
+
+.pc-corner-bottom {
+  bottom: 5.5cqw;
+  right: 5cqw;
+  rotate: 180deg;
+}
+
+.pc-corner-rank {
+  font-size: 12cqw;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+.pc-corner-suit {
+  font-size: 9.5cqw;
+}
+
+/* The pips' field: pips are centred on their point. */
+.pc-field {
+  position: absolute;
+  inset: 20cqh 26cqw;
+}
+
+.pc-pip {
+  position: absolute;
+  translate: -50% -50%;
+  font-size: 17cqw;
+}
+
+.pc-pip-flipped {
+  rotate: 180deg;
+}
+
+.pc-ace {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 34cqw;
+}
+
+.pc-ace-spades {
+  font-size: 50cqw;
+}
+
+/* Court cards: a framed panel with a large letter, suit above and below. */
+.pc-court {
+  position: absolute;
+  inset: -6cqh -8cqw;
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  place-items: center;
+  border: 0.5cqw solid var(--pc-ink);
+  border-radius: 2cqw;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      color-mix(in srgb, var(--pc-ink) 7%, transparent) 0 1.2cqw,
+      transparent 1.2cqw 2.6cqw
+    );
+}
+
+.pc-court-letter {
+  font-size: 42cqw;
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: -0.04em;
+}
+
+.pc-court-suit {
+  font-size: 14cqw;
+}
+
+.pc-court-suit-top {
+  align-self: end;
+}
+
+.pc-court-suit-bottom {
+  align-self: start;
+  rotate: 180deg;
+}

@@ -1,13 +1,20 @@
 /* The demo page around the deck. The deck's own styles are stacked-deck.css. */
 
+/* One column: the sound first, then the table, the timing, every take, the whole deck. Dark, a card table at night. */
 :root {
   color-scheme: dark;
-  --page: #121212;
-  --ink: #f2f2f0;
-  --ink-dim: #9a9a96;
-  --line: #262626;
-  --chosen: #ff7a3d;
+  --page: #111312;
+  --raised: #191c1a;
+  --line: #2a2f2c;
+  --ink: #eef0ee;
+  --ink-dim: #97a09a;
+  --accent: #f26a2e;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Playing cards are 5 : 7, upright. */
+  --sd-card-width: min(100vw - 48px, calc(min(54svh, 460px) * 5 / 7));
+  --sd-card-height: calc(var(--sd-card-width) * 7 / 5);
 }
 
 * {
@@ -22,22 +29,22 @@ body {
 }
 
 .demo {
-  max-width: 1120px;
+  max-width: 940px;
   margin: 0 auto;
-  padding: 56px max(16px, env(safe-area-inset-right)) 140px max(16px, env(safe-area-inset-left));
+  padding: 48px max(16px, env(safe-area-inset-right)) 72px max(16px, env(safe-area-inset-left));
   display: grid;
-  gap: 40px;
+  gap: 52px;
 }
 
 .demo-header {
   display: grid;
   gap: 12px;
-  max-width: 62ch;
 }
 
-.demo-eyebrow {
+.demo-eyebrow,
+h2 {
   margin: 0;
-  font: 500 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 500 12px/1.2 var(--mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-dim);
@@ -48,13 +55,26 @@ h1 {
   font-size: clamp(36px, 6vw, 56px);
   line-height: 1;
   letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.demo-lede,
+.demo-text {
+  margin: 0;
+  max-width: 64ch;
+  color: var(--ink-dim);
+  font-size: 16px;
+  line-height: 1.6;
 }
 
 .demo-lede {
-  margin: 0;
-  color: var(--ink-dim);
   font-size: 17px;
-  line-height: 1.55;
 }
 
 .demo-lede strong {
@@ -62,69 +82,239 @@ h1 {
   font-weight: 600;
 }
 
-.demo-status {
-  margin: 0;
-  min-height: 1.5em;
-  color: var(--chosen);
+code,
+.demo-num {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
-.demo-table {
+.demo-section {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 28px 20px;
+  gap: 16px;
+  min-width: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Sound sets ─────────────────────────────────────────────────────────── */
+.demo-sets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.demo-set {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--raised);
+  text-align: start;
+}
+
+.demo-set:hover {
+  border-color: #46504a;
+}
+
+.demo-set[aria-checked='true'] {
+  border-color: var(--accent);
+}
+
+.demo-set b {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.demo-set-tag {
+  font: 500 11px/1 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.demo-set[aria-checked='true'] .demo-set-tag {
+  color: var(--accent);
+}
+
+.demo-set-note {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+
+.demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  align-items: center;
+  color: var(--ink-dim);
+  font-size: 14px;
+}
+
+.demo-controls label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+input[type='range'],
+input[type='checkbox'] {
+  accent-color: var(--accent);
+}
+
+input[type='range'] {
+  width: 130px;
+}
+
+/* ── The table ──────────────────────────────────────────────────────────── */
+.demo-felt {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 14px;
+  min-height: 260px;
+  padding: 32px 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: radial-gradient(120% 100% at 50% 30%, #1d2a22 0%, #121714 70%);
+  text-align: center;
+}
+
+.demo-deal {
+  padding: 15px 30px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--page);
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 12px 30px -10px rgb(0 0 0 / 0.8);
+  transition: scale 150ms ease-out;
+}
+
+.demo-deal:active {
+  scale: 0.97;
+}
+
+.demo-felt-hint {
+  margin: 0;
+  font: 12px/1.4 var(--mono);
+  color: var(--ink-dim);
+}
+
+.demo-status {
+  margin: 0;
+  min-height: 1.4em;
+  color: var(--accent);
+}
+
+/* ── Timing ─────────────────────────────────────────────────────────────── */
+.demo-wave {
+  overflow-x: auto;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--raised);
+}
+
+.demo-wave canvas {
+  display: block;
+  width: 100%;
+  min-width: 560px;
+  height: 220px;
+}
+
+.demo-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-dim);
+  font-size: 13px;
+}
+
+/* ── Takes ──────────────────────────────────────────────────────────────── */
+.demo-takes {
+  display: grid;
+  gap: 16px;
+}
+
+.demo-take-group {
+  display: grid;
+  gap: 8px;
+}
+
+.demo-take-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.demo-take {
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--raised);
+  font: 12.5px/1 var(--mono);
+}
+
+.demo-take:hover {
+  border-color: #46504a;
+}
+
+/* ── The whole deck ─────────────────────────────────────────────────────── */
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 18px 12px;
 }
 
 .demo-tile {
   display: grid;
-  gap: 10px;
-  scroll-margin: 120px;
+  gap: 8px;
 }
 
 .demo-tile-face {
   position: relative;
+  aspect-ratio: 5 / 7;
   overflow: hidden;
-  aspect-ratio: 3 / 2;
-  border-radius: 10px;
+  border-radius: 8px;
   outline: 2px solid transparent;
   outline-offset: 3px;
   transition: outline-color 200ms;
 }
 
 .demo-tile[data-chosen] .demo-tile-face {
-  outline-color: var(--chosen);
+  outline-color: var(--accent);
 }
 
 .demo-tile-title {
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.3;
   color: var(--ink-dim);
 }
 
-.demo-tile-face .demo-face-numeral {
-  font-size: 40px;
+.demo-tile[data-chosen] .demo-tile-title {
+  color: var(--accent);
 }
 
-.demo-face-label {
-  position: absolute;
-  inset-block-start: 14px;
-  inset-inline-start: 16px;
-  font: 500 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-  letter-spacing: 0.06em;
-  color: rgb(255 255 255 / 0.85);
-}
-
-.demo-face-numeral {
-  position: absolute;
-  inset-block-end: 6px;
-  inset-inline-end: 14px;
-  font-size: clamp(96px, 22vw, 180px);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.06em;
-  line-height: 0.8;
-  color: rgb(255 255 255 / 0.92);
-  mix-blend-mode: overlay;
-}
-
+/* ── Footer ─────────────────────────────────────────────────────────────── */
 .demo-footer {
   display: grid;
   gap: 6px;
@@ -141,30 +331,4 @@ h1 {
 
 .demo-footer a {
   color: var(--ink);
-}
-
-.demo-deal {
-  position: fixed;
-  inset-block-end: max(24px, env(safe-area-inset-bottom));
-  inset-inline-start: 50%;
-  translate: -50% 0;
-  padding: 14px 28px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--page);
-  font: 600 15px/1 inherit;
-  font-family: inherit;
-  cursor: pointer;
-  box-shadow: 0 12px 30px -10px rgb(0 0 0 / 0.8);
-  transition: scale 150ms ease-out;
-}
-
-.demo-deal:active {
-  scale: 0.97;
-}
-
-.demo-deal:focus-visible {
-  outline: 2px solid var(--chosen);
-  outline-offset: 3px;
 }

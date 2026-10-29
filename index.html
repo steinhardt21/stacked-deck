@@ -5,35 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark" />
     <title>Stacked Deck</title>
-    <meta name="description" content="A deck of cards in depth: dealt up one by one, opened at its middle, turned by wheel, swipe or keys, with a synthetic tick." />
+    <meta name="description" content="A deck of playing cards in depth: dealt up one by one, opened at its middle, turned by wheel, swipe or keys, with four sound sets to choose from." />
   </head>
   <body>
     <main class="demo">
       <header class="demo-header">
-        <p class="demo-eyebrow">Interaction study</p>
+        <p class="demo-eyebrow">Interaction study · cards in depth</p>
         <h1>Stacked Deck</h1>
         <p class="demo-lede">
-          Press <strong>Deal</strong>. The cards come up one at a time, the front one last. Scroll, swipe or use the
-          arrow keys to turn them, either way from the start. Press the front card to choose it.
+          A deck laid over the page. Press <strong>Deal</strong>: the cards come up one at a time and the front card
+          lands last. The deck opens at its middle, so the first scroll can go up or down. Turn it with the wheel, a
+          swipe or the arrow keys, and press the front card to choose it.
         </p>
-        <p class="demo-status" data-status aria-live="polite"></p>
       </header>
 
-      <section class="demo-table" data-table aria-label="All cards"></section>
+      <section class="demo-section" aria-labelledby="sound-heading">
+        <h2 id="sound-heading">Choose the sound</h2>
+        <div class="demo-sets" data-sets role="radiogroup" aria-label="Sound set"></div>
+        <div class="demo-controls">
+          <label for="volume">Volume <input type="range" id="volume" min="0" max="1" step="0.05" value="0.45" /> <output class="demo-num" id="volume-value" for="volume">0.45</output></label>
+          <label for="vary"><input type="checkbox" id="vary" checked /> Vary the pitch of every card</label>
+        </div>
+      </section>
+
+      <section class="demo-section" aria-labelledby="table-heading">
+        <h2 id="table-heading">The table</h2>
+        <div class="demo-felt">
+          <button type="button" class="demo-deal" data-deal>Deal the deck</button>
+          <p class="demo-felt-hint">Scroll · swipe · ← → ↑ ↓ · Home / End · Enter chooses the front card</p>
+          <p class="demo-status" data-status aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="demo-section" aria-labelledby="timing-heading">
+        <h2 id="timing-heading">The deal, timed to the fan</h2>
+        <p class="demo-text">
+          The loudness of <code>card-fan-1</code> (the Dealer set's open sound), measured every 10 ms. The three cards
+          behind land during the riffle, furthest first; the front card lands last, between the peak and the final tap.
+        </p>
+        <div class="demo-wave"><canvas data-wave aria-label="Loudness of the open sound over 720 ms, with the moments each card lands"></canvas></div>
+        <ul class="demo-legend">
+          <li><span class="demo-num">0–140 ms</span> thumb on the deck</li>
+          <li><span class="demo-num">150–450 ms</span> riffle · cards 3, 2, 1 land (~330 / 400 / 470 ms)</li>
+          <li><span class="demo-num">460–580 ms</span> peak and tap · the front card lands (~520–570 ms)</li>
+        </ul>
+      </section>
+
+      <section class="demo-section" aria-labelledby="takes-heading">
+        <h2 id="takes-heading">Every take</h2>
+        <div class="demo-takes" data-takes></div>
+      </section>
+
+      <section class="demo-section" aria-labelledby="deck-heading">
+        <h2 id="deck-heading">The whole deck</h2>
+        <div class="demo-grid" data-grid aria-label="All 52 cards"></div>
+      </section>
 
       <footer class="demo-footer">
         <p>
-          Vanilla TypeScript, motion in CSS, sound from Web Audio — no runtime dependencies.
-          <a href="https://github.com/steinhardt21/stacked-deck">Source on GitHub</a>.
+          Vanilla TypeScript, motion in CSS, sound from Web Audio. No runtime dependencies.
+          <a href="https://github.com/steinhardt21/stacked-deck">Source on GitHub</a> · MIT.
         </p>
         <p>
-          The stacked-in-depth interaction is inspired by Rauno Freiberg’s “Time Machine” on
+          Recorded sounds: <a href="https://kenney.nl/assets/casino-audio">Casino Audio by Kenney</a> (CC0), converted to
+          mono mp3.
+        </p>
+        <p>
+          The stack-in-depth idea comes from Rauno Freiberg’s “Time Machine” on
           <a href="https://devouringdetails.com">Devouring Details</a>. This is an independent implementation.
         </p>
       </footer>
     </main>
-
-    <button type="button" class="demo-deal" data-deal>Deal</button>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
