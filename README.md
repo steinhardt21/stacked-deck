@@ -18,6 +18,16 @@ pnpm dev       # http://localhost:5173
 pnpm build     # type-checks, then builds to dist/
 ```
 
+## Record a video of it
+
+```sh
+pnpm build
+node scripts/record-video.mjs                 # → recordings/stacked-deck-dealer.mp4
+node scripts/record-video.mjs --set=table     # the Table or Flick sound set instead
+```
+
+This produces 1080 × 1350 (4:5) at 60 fps with sound, about 11 s and under 3 MB. It isn't a screen recording: the page runs on a virtual clock that advances 1/60 s per frame, so no frame is dropped and every take is identical. The soundtrack is rebuilt with ffmpeg from the exact moment of every open, turn and choice. The last frame matches the first, so the clip loops cleanly. It needs Google Chrome and ffmpeg installed.
+
 ## Use it
 
 ```ts
