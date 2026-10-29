@@ -1,0 +1,241 @@
+/*
+ * Stacked Deck. Everything that moves is here; the script only writes
+ * `data-depth` on each card and `data-dealing` on the deck.
+ *
+ * Depth geometry: each card behind the front is 7.5% smaller and 28px
+ * higher; the pile shows three behind the front, the fourth sits hidden
+ * behind the third. A turned card (-1) grows, drops and fades away.
+ */
+
+.sd-deck {
+  /* A spring (stiffness 320, damping 26, mass 0.6 — damping ratio 0.94)
+     sampled into `linear()`: settles within 0.1% at ~320ms, no visible
+     overshoot. Regenerate rather than edit a stop:
+     x(t) = 1 − e^(−ζω₀t)·(cos ω_d t + (ζω₀/ω_d)·sin ω_d t). */
+  --sd-spring: linear(0, 0.0177 2.78%, 0.0625 5.56%, 0.1245 8.33%, 0.1963 11.11%, 0.2723 13.89%, 0.3487 16.67%, 0.4229 19.44%, 0.4931 22.22%, 0.5582 25%, 0.6176 27.78%, 0.6711 30.56%, 0.7188 33.33%, 0.761 36.11%, 0.7979 38.89%, 0.8299 41.67%, 0.8576 44.44%, 0.8814 47.22%, 0.9017 50%, 0.9189 52.78%, 0.9334 55.56%, 0.9456 58.33%, 0.9557 61.11%, 0.9642 63.89%, 0.9712 66.67%, 0.977 69.44%, 0.9817 72.22%, 0.9856 75%, 0.9887 77.78%, 0.9912 80.56%, 0.9933 83.33%, 0.9949 86.11%, 0.9962 88.89%, 0.9972 91.67%, 0.998 94.44%, 0.9986 97.22%, 1);
+  --sd-spring-time: 340ms;
+  --sd-fade: 180ms ease-out;
+  --sd-step-scale: 0.075;
+  --sd-step-rise: 28px;
+  --sd-card-width: min(100vw - 32px, 560px);
+  --sd-card-height: min(42svh, 380px);
+  --sd-ring: #f7f7f5;
+  --sd-gap: #121212;
+  --sd-veil: rgb(14 14 14 / 0.72);
+
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: transparent;
+  color: #f2f2f0;
+  touch-action: none;
+  overscroll-behavior: contain;
+  transition:
+    display 200ms allow-discrete,
+    overlay 200ms allow-discrete;
+}
+
+.sd-deck[open] {
+  display: grid;
+  place-items: center;
+}
+
+.sd-deck::backdrop {
+  background: var(--sd-veil, rgb(14 14 14 / 0.72));
+  backdrop-filter: blur(10px);
+  transition:
+    opacity 200ms ease-out,
+    display 200ms allow-discrete,
+    overlay 200ms allow-discrete;
+}
+
+.sd-deck:not([open])::backdrop,
+.sd-deck:not([open]) :is(.sd-pile, .sd-controls) {
+  opacity: 0;
+}
+
+@starting-style {
+  .sd-deck[open]::backdrop,
+  .sd-deck[open] .sd-controls {
+    opacity: 0;
+  }
+}
+
+.sd-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── Controls ─────────────────────────────────────────────────────────────── */
+.sd-controls {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: max(16px, env(safe-area-inset-top));
+  inset-inline-end: max(16px, env(safe-area-inset-right));
+  display: flex;
+  gap: 8px;
+  transition: opacity 200ms ease-out;
+}
+
+.sd-control {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.09);
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 150ms;
+}
+
+.sd-control:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+
+.sd-control:focus-visible {
+  outline: 2px solid var(--sd-ring);
+  outline-offset: 3px;
+}
+
+.sd-control svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sd-control[aria-pressed='true'] .sd-sound-cross,
+.sd-control[aria-pressed='false'] .sd-sound-waves {
+  display: none;
+}
+
+/* ── The pile ─────────────────────────────────────────────────────────────── */
+.sd-pile {
+  display: grid;
+  isolation: isolate;
+  /* Room above the front card for the edges of the cards behind it. */
+  margin-block-start: calc(3 * var(--sd-step-rise));
+  transition: opacity 200ms ease-out;
+}
+
+.sd-card {
+  --sd-depth: 0;
+  position: relative;
+  grid-area: 1 / 1;
+  width: var(--sd-card-width);
+  height: var(--sd-card-height);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  translate: 0 calc(var(--sd-depth) * var(--sd-step-rise) * -1);
+  scale: calc(1 - var(--sd-depth) * var(--sd-step-scale));
+  transition:
+    translate var(--sd-spring-time) var(--sd-spring),
+    scale var(--sd-spring-time) var(--sd-spring),
+    opacity var(--sd-fade),
+    filter var(--sd-fade);
+}
+
+.sd-card[data-depth='1'] { --sd-depth: 1; }
+.sd-card[data-depth='2'] { --sd-depth: 2; }
+.sd-card[data-depth='3'] { --sd-depth: 3; }
+
+/* Parked: hidden behind the third, held still. */
+.sd-card[data-depth='4'] {
+  --sd-depth: 3;
+  scale: calc(1 - 4 * var(--sd-step-scale));
+  opacity: 0;
+}
+
+/* Turned: towards the viewer and gone. */
+.sd-card[data-depth='-1'] {
+  translate: 0 var(--sd-step-rise);
+  scale: calc(1 + var(--sd-step-scale));
+  opacity: 0;
+  filter: blur(1.5px);
+}
+
+.sd-card:focus-visible {
+  outline: none;
+}
+
+.sd-card:focus-visible .sd-face {
+  outline-width: 3px;
+}
+
+.sd-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #2a2a2a;
+  outline: 2px solid var(--sd-ring);
+  outline-offset: 4px;
+  box-shadow:
+    0 0 0 4px var(--sd-gap),
+    0 22px 44px -20px rgb(0 0 0 / 0.75);
+}
+
+.sd-title {
+  position: absolute;
+  inset-block-start: calc(100% + 18px);
+  inset-inline: 0;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 20px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.9;
+}
+
+/* ── The deal ─────────────────────────────────────────────────────────────
+   On open the visible cards come up from below one at a time, furthest
+   first, and the front card last — the card the eye is on moves most and
+   lands last. `data-dealing` is on the deck only until the first turn (or
+   until the deal has landed), so its delays never touch a turn. */
+@media (prefers-reduced-motion: no-preference) {
+  @starting-style {
+    .sd-deck[data-dealing] .sd-card:is([data-depth='0'], [data-depth='1'], [data-depth='2'], [data-depth='3']) {
+      translate: 0 min(48svh, 400px);
+      scale: 0.93;
+      opacity: 0;
+    }
+  }
+
+  .sd-deck[data-dealing] .sd-card {
+    transition-delay: calc((3 - var(--sd-depth)) * 80ms + 120ms);
+  }
+}
+
+/* Reduced motion: no deal, no travel — the cards cross-fade in place. */
+@media (prefers-reduced-motion: reduce) {
+  .sd-card {
+    transition: opacity 150ms ease-out;
+  }
+
+  .sd-card[data-depth='-1'] {
+    translate: 0 0;
+    scale: 1;
+    filter: none;
+  }
+}

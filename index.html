@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <title>Stacked Deck</title>
+    <meta name="description" content="A deck of cards in depth: dealt up one by one, opened at its middle, turned by wheel, swipe or keys, with a synthetic tick." />
+  </head>
+  <body>
+    <main class="demo">
+      <header class="demo-header">
+        <p class="demo-eyebrow">Interaction study</p>
+        <h1>Stacked Deck</h1>
+        <p class="demo-lede">
+          Press <strong>Deal</strong>. The cards come up one at a time, the front one last. Scroll, swipe or use the
+          arrow keys to turn them, either way from the start. Press the front card to choose it.
+        </p>
+        <p class="demo-status" data-status aria-live="polite"></p>
+      </header>
+
+      <section class="demo-table" data-table aria-label="All cards"></section>
+
+      <footer class="demo-footer">
+        <p>
+          Vanilla TypeScript, motion in CSS, sound from Web Audio — no runtime dependencies.
+          <a href="https://github.com/steinhardt21/stacked-deck">Source on GitHub</a>.
+        </p>
+        <p>
+          The stacked-in-depth interaction is inspired by Rauno Freiberg’s “Time Machine” on
+          <a href="https://devouringdetails.com">Devouring Details</a>. This is an independent implementation.
+        </p>
+      </footer>
+    </main>
+
+    <button type="button" class="demo-deal" data-deal>Deal</button>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

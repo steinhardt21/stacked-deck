@@ -1,0 +1,17 @@
+{
+  "name": "stacked-deck",
+  "version": "0.1.0",
+  "description": "A deck of cards in depth: dealt up one by one, opened at its middle, turned by wheel, swipe or keys, with a synthetic tick. Vanilla TypeScript, CSS motion, no dependencies at runtime.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.3.6"
+  }
+}
